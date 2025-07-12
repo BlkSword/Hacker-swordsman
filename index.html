@@ -20,11 +20,16 @@
       overflow: hidden;
     }
 
+    /* 字体定义 */
+    @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+
+    /* 黑客背景 */
     canvas {
       position: fixed;
       top: 0;
       left: 0;
-      z-index: 0;
+      z-index: -1;
+      background: #0a0a0a;
     }
 
     .hero {
@@ -190,7 +195,6 @@
     }
 
     /*  begin cubes css */
-
     .cubes {
       width: 40px;
       height: 40px;
@@ -255,7 +259,6 @@
     }
 
     /*  begin folding css */
-
     .folding {
       margin: 20px auto;
       width: 40px;
@@ -330,7 +333,6 @@
     }
 
     /*  begin bounce css */
-
     .bounce {
       margin: 100px auto 0;
       width: 70px;
@@ -368,7 +370,6 @@
     }
 
     /*  begin dots css */
-
     .dots {
       margin: 100px auto;
       width: 40px;
@@ -415,7 +416,6 @@
     }
 
     /*  begin fluct css */
-
     .fluct {
       width: 40px;
       height: 40px;
@@ -439,7 +439,6 @@
     }
 
     /*  begin double css */
-
     .double {
       width: 40px;
       height: 40px;
@@ -477,7 +476,6 @@
     }
 
     /*  begin rect css */
-
     .rect {
       margin: 100px auto;
       width: 50px;
@@ -542,9 +540,8 @@
     </div>
   </div>
 
-  <!-- 粒子背景 -->
-  <canvas id="particles"></canvas>
-
+  <!-- 黑客背景 -->
+  <canvas id="matrix" style="position: fixed; top: 0; left: 0; z-index: -1;"></canvas>
   <!-- 主体内容 -->
   <div class="hero">
     <h1>Hacker swordsman</h1>
@@ -560,65 +557,62 @@
     等待执行命令......
   </div>
 
-  <!-- JavaScript -->
   <script>
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 
-    // 粒子背景逻辑
-    const canvas = document.getElementById('particles');
+    // 矩阵雨效果
+    const canvas = document.getElementById('matrix');
     const ctx = canvas.getContext('2d');
     let width, height;
-    window.addEventListener('resize', () => {
+
+    function resize() {
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
-    });
-    resize();
-
-    const particles = [];
-    for (let i = 0; i < 100; i++) {
-      particles.push({
-        x: Math.random() * width,
-        y: Math.random() * height,
-        radius: Math.random() * 2 + 1,
-        vx: (Math.random() - 0.5) * 1,
-        vy: (Math.random() - 0.5) * 1,
-      });
     }
 
-    function drawLines() {
-      ctx.strokeStyle = 'rgba(0, 255, 0, 0.1)';
-      for (let i = 0; i < particles.length; i++) {
-        for (let j = i + 1; j < particles.length; j++) {
-          const dx = particles[i].x - particles[j].x;
-          const dy = particles[i].y - particles[j].y;
-          const distance = Math.sqrt(dx * dx + dy * dy);
-          if (distance < 100) {
-            ctx.beginPath();
-            ctx.moveTo(particles[i].x, particles[i].y);
-            ctx.lineTo(particles[j].x, particles[j].y);
-            ctx.stroke();
-          }
-        }
-      }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // 矩阵字符
+    const matrix = "ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789@#$%^&*()*&^%+-/~{[|`]}";
+    const matrixArray = matrix.split("");
+
+    const fontSize = 10;
+    const columns = width / fontSize;
+
+    // 每列的当前位置
+    const drops = [];
+    for (let x = 0; x < columns; x++) {
+      drops[x] = 1;
     }
 
     function draw() {
-      ctx.fillStyle = '#0a0a0a';
+      // 设置半透明黑色背景，形成拖尾效果
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.04)';
       ctx.fillRect(0, 0, width, height);
-      drawLines();
-      for (let p of particles) {
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = '#00ff00';
-        ctx.fill();
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.x < 0 || p.x > width) p.vx *= -1;
-        if (p.y < 0 || p.y > height) p.vy *= -1;
+
+      ctx.fillStyle = '#0F0'; // 绿色
+      ctx.font = fontSize + 'px monospace';
+
+      // 绘制矩阵字符
+      for (let i = 0; i < drops.length; i++) {
+        // 随机选择字符
+        const text = matrixArray[Math.floor(Math.random() * matrixArray.length)];
+
+        // 绘制字符
+        ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+        // 当字符到达底部或随机重置时，重新开始
+        if (drops[i] * fontSize > height && Math.random() > 0.975) {
+          drops[i] = 0;
+        }
+
+        drops[i]++;
       }
-      requestAnimationFrame(draw);
     }
-    draw();
+
+    // 启动动画
+    setInterval(draw, 35);
 
     // 终端模拟逻辑
     function startHacking() {
@@ -645,7 +639,6 @@
         const container = document.createElement('div');
         container.className = 'terminal-line';
 
-        // 根据日志类型设置颜色
         if (line.startsWith('[INFO]')) container.style.color = '#00ff00';
         else if (line.startsWith('[WARNING]')) container.style.color = '#ffff00';
         else if (line.startsWith('[ERROR]')) container.style.color = '#ff0000';
@@ -656,7 +649,6 @@
 
         terminal.innerHTML = '';
         terminal.appendChild(container);
-
         let i = 0;
         const timer = setInterval(() => {
           container.textContent += line[i];
@@ -670,9 +662,7 @@
 
       function executeLines(index = 0) {
         if (index >= lines.length) return;
-
         const line = lines[index];
-
         const delays = [10, 15, 20, 25, 30];
         const randomDelay = delays[Math.floor(Math.random() * delays.length)];
 
@@ -689,7 +679,7 @@
 
           if (index === lines.length - 1) {
             setTimeout(() => {
-              window.location.href = 'https://blog.xiaohei.life';
+              window.location.href = 'https://blog.xiaohei.life ';
             }, 1500);
           }
         });
@@ -699,7 +689,6 @@
         let percent = 0;
         const totalBlocks = 20;
         const interval = 50;
-
         updateProgress(container, percent, totalBlocks);
 
         const progressInterval = setInterval(() => {
@@ -723,9 +712,13 @@
       setTimeout(executeLines, 1500);
     }
 
-    // 页面加载完成后移除加载动画
     window.onload = () => {
-      document.querySelector('.loading').remove();
+      const loader = document.querySelector('.loading');
+      loader.style.opacity = 0;
+      loader.style.transition = 'opacity 1s ease';
+      setTimeout(() => {
+        loader.style.display = 'none';
+      }, 1000);
     };
   </script>
 </body>
